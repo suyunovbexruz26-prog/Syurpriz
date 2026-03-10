@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crystal Heart - Muhtasham Yuz Yil</title>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #000; font-family: 'Segoe UI', sans-serif; }
+        body::before {
+            content: ""; position: absolute; inset: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 100; pointer-events: none;
+        }
+        .author { position: absolute; top: 1.5rem; right: 2rem; color: rgba(255, 255, 255, 0.4); font-size: 0.7rem; z-index: 10; }
+        .hitext { position: absolute; top: 12%; width: 100%; text-align: center; color: white; font-size: 1.1rem; letter-spacing: 3px; z-index: 10; font-weight: 200; opacity: 0.6; }
+        .footer-text { position: absolute; bottom: 8%; width: 100%; text-align: center; color: #ffb6c1; font-size: 1.3rem; font-weight: 300; z-index: 10; text-shadow: 0 0 15px rgba(255, 182, 193, 0.5); }
+        canvas { position: fixed; top: 0; left: 0; outline: none; }
+        .music-btn {
+            position: absolute; bottom: 1.5rem; right: 1.5rem; z-index: 100;
+            background: rgba(255, 192, 203, 0.15); border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 8px 15px; border-radius: 30px; color: white; cursor: pointer; font-size: 0.8rem; backdrop-filter: blur(5px);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="author">suyunov.b</div>
+    <h1 class="hitext">this is for you</h1>
+    <div class="footer-text">Onam va opam uchun ❤️</div>
+
+    <audio id="bgMusic" loop preload="auto">
+        <source src="https://muzbarona.org/songs_dl/07e86e11894d89617d917f8a75e8e974/m_velikolepnyy-vek_-_donmek-vozvraschenie.mp3" type="audio/mpeg">
+    </audio>
+    <button class="music-btn" onclick="toggleMusic()" id="btnText">Muzikani yoqish 🎻</button>
+
+    <canvas id="webgl"></canvas>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <script>
+        const audio = document.getElementById('bgMusic');
+        const btnText = document.getElementById('btnText');
+
+        function toggleMusic() {
+            if (audio.paused) {
+                audio.play();
+                btnText.innerText = "Muzika: ON 🔊";
+                localStorage.setItem('musicPlaying', 'true');
+            } else {
+                audio.pause();
+                btnText.innerText = "Muzika: OFF 🔇";
+                localStorage.setItem('musicPlaying', 'false');
+            }
+        }
+
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.z = 40;
+
+        const renderer = new THREE.WebGLRenderer({ canvas: document.querySelector('#webgl'), antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+        function createHeartMesh(color) {
+            const heartShape = new THREE.Shape();
+            const x = 0, y = 0;
+            heartShape.moveTo( x + 2.5, y + 2.5 );
+            heartShape.bezierCurveTo( x + 2.5, y + 2.5, x + 2, y, x, y );
+            heartShape.bezierCurveTo( x - 3, y, x - 3, y + 3.5, x - 3, y + 3.5 );
+            heartShape.bezierCurveTo( x - 3, y + 5.5, x - 1, y + 7.7, x + 2.5, y + 9.5 );
+            heartShape.bezierCurveTo( x + 6, y + 7.7, x + 8, y + 5.5, x + 8, y + 3.5 );
+            heartShape.bezierCurveTo( x + 8, y + 3.5, x + 8, y, x + 5, y );
+            heartShape.bezierCurveTo( x + 3.5, y, x + 2.5, y + 2.5, x + 2.5, y + 2.5 );
+
+            const extrudeSettings = { depth: 1.2, bevelEnabled: true, bevelSegments: 3, steps: 1, bevelSize: 0.4, bevelThickness: 0.4 };
+            const geometry = new THREE.ExtrudeGeometry( heartShape, extrudeSettings );
+            geometry.center();
+            
+            const material = new THREE.MeshPhongMaterial({
+                color: color, emissive: 0xff0080, emissiveIntensity: 2.0,
+                shininess: 150, transparent: true, opacity: 0.95, flatShading: true 
+            });
+            return new THREE.Mesh( geometry, material );
+        }
+
+        const crystalHeart = createHeartMesh(0xff1493);
+        crystalHeart.scale.set(0.8, 0.8, 0.8);
+        scene.add(crystalHeart);
+
+        const light = new THREE.PointLight(0xffffff, 2.5, 100);
+        light.position.set(10, 10, 10);
+        scene.add(light);
+        scene.add(new THREE.AmbientLight(0x505050));
+
+        // Zarrachalar - 13,000 tagacha ko'paytirildi
+        const particlesGeometry = new THREE.BufferGeometry();
+        const count = 13000; 
+        const positions = new Float32Array(count * 3);
+
+        for(let i = 0; i < count; i++) {
+            const t = Math.random() * Math.PI * 2;
+            const x = 16 * Math.pow(Math.sin(t), 3);
+            const y = 13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t);
+            
+            positions[i * 3] = (x * 0.72) + (Math.random() - 0.5) * 0.85; 
+            positions[i * 3 + 1] = (y * 0.72) + (Math.random() - 0.5) * 0.85;
+            positions[i * 3 + 2] = (Math.random() - 0.5) * 1.5; 
+        }
+
+        particlesGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        const particlesMaterial = new THREE.PointsMaterial({
+            size: 0.045, color: 0xff69b4, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending
+        });
+
+        const heartParticles = new THREE.Points(particlesGeometry, particlesMaterial);
+        scene.add(heartParticles);
+
+        const animate = () => {
+            const time = Date.now() * 0.001;
+            crystalHeart.rotation.y += 0.012;
+            crystalHeart.rotation.x += 0.008;
+            const scale = 0.8 + Math.sin(time * 2.5) * 0.03;
+            crystalHeart.scale.set(scale, scale, scale);
+            heartParticles.rotation.y += 0.005;
+            renderer.render(scene, camera);
+            window.requestAnimationFrame(animate);
+        };
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        animate();
+    </script>
+</body>
+</html>
+
